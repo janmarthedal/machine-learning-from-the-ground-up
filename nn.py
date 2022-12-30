@@ -4,7 +4,7 @@ from activation import SIGMOID_ACTIVATION, IDENTITY_ACTIVATION
 
 if __name__ == "__main__":
     np.random.seed(seed=0)
-    nn = SimpleNeuralNetwork([(2, ), (3, SIGMOID_ACTIVATION), (2, IDENTITY_ACTIVATION)])
+    nn = SimpleNeuralNetwork(2, [(3, SIGMOID_ACTIVATION), (2, IDENTITY_ACTIVATION)])
     xs = np.array([
         [1.0, 0.0],
         [2.0, 0.0]

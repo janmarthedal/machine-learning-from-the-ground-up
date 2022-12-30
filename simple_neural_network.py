@@ -11,20 +11,20 @@ class Layer:
     def __init__(self, input_count, output_count, activation):
         self.W = np.random.randn(output_count, input_count)
         self.b = np.random.randn(output_count, 1)
-        self.activation = activation
+        self.g = activation
 
 class SimpleNeuralNetwork:
 
-    def __init__(self, layer_config):
-        unit_counts = [layer[0] for layer in layer_config]
-        activations = [layer[1] for layer in layer_config[1:]]
+    def __init__(self, input_count, layer_params):
+        unit_counts = [input_count] + [layer[0] for layer in layer_params]
+        activations = [layer[1] for layer in layer_params]
         self.layers = [Layer(m, n, g) for m, n, g in zip(unit_counts[:-1], unit_counts[1:], activations)]
 
     def evaluate(self, a):
         values = [NodeValues(None, a)]
         for layer in self.layers:
             z = np.dot(layer.W, a) + layer.b
-            a = layer.activation[0](z)
+            a = layer.g[0](z)
             values.append(NodeValues(z, a))
         return values
 
@@ -46,7 +46,7 @@ class SimpleNeuralNetwork:
 
             # numpy '*' does element-wise multiplication
             # dJdz^l = dJda^l * g^l'(z^l)
-            dJdz = dJda * self.layers[l - 1].activation[1](values[l].z)
+            dJdz = dJda * self.layers[l - 1].g[1](values[l].z)
 
             # dJdW^l = dJdz^l * a^(l-1)^T
             dJdW = np.dot(dJdz, values[l - 1].a.T)
