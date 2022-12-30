@@ -19,16 +19,9 @@ NodeValues = namedtuple('NodeValues', ['z', 'a'])
 
 class Layer:
     def __init__(self, input_count, output_count, activation):
-        self.weights = np.random.randn(output_count, input_count)
-        self.biases = np.random.randn(output_count, 1)
+        self.W = np.random.randn(output_count, input_count)
+        self.b = np.random.randn(output_count, 1)
         self.activation = activation
-    def evaluate(self, a):
-        z = np.dot(self.weights, a) + self.biases
-        a = self.activation[0](z)
-        return z, a
-    def increment_weights(self, delta_weights, delta_biases):
-        self.weights += delta_weights
-        self.biases += delta_biases
 
 class NeuralNetwork:
 
@@ -40,7 +33,8 @@ class NeuralNetwork:
     def evaluate(self, a):
         values = [NodeValues(None, a)]
         for layer in self.layers:
-            z, a = layer.evaluate(a)
+            z = np.dot(layer.W, a) + layer.b
+            a = layer.activation[0](z)
             values.append(NodeValues(z, a))
         return values
 
@@ -58,7 +52,7 @@ class NeuralNetwork:
                 dJda = (values[L].a - y) / m
             else:
                 # dJda^l = W^(l+1)^T * dJdz^(l+1)
-                dJda = np.dot(self.layers[l + 1 - 1].weights.T, dJdz)
+                dJda = np.dot(self.layers[l + 1 - 1].W.T, dJdz)
 
             # numpy '*' does element-wise multiplication
             # dJdz^l = dJda^l * g^l'(z^l)
@@ -84,7 +78,8 @@ class NeuralNetwork:
             print("Epoch {}: error = {}".format(epoch, error))
             dJdWs, dJdbs = self.backprop(values, ys)
             for layer, dJdW, dJdb in zip(self.layers, dJdWs, dJdbs):
-                layer.increment_weights(-learning_rate * dJdW, -learning_rate * dJdb)
+                layer.W -= learning_rate * dJdW
+                layer.b -= learning_rate * dJdb
         print(values[-1].a)
         print(ys)
 
