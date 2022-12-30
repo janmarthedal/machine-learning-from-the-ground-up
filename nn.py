@@ -30,14 +30,14 @@ class NeuralNetwork:
 
     def __init__(self, layer_config):
         unit_counts = [layer[0] for layer in layer_config]
-        self.weights = [None] + [np.random.randn(m, n) for n, m in zip(unit_counts[:-1], unit_counts[1:])]
-        self.biases = [None] + [np.random.randn(m, 1) for m in unit_counts[1:]]
-        self.activation_functions = [None] + [ACTIVATION_FUNCTIONS[c[1]] for c in layer_config[1:]]
+        self.weights = [np.random.randn(m, n) for n, m in zip(unit_counts[:-1], unit_counts[1:])]
+        self.biases = [np.random.randn(m, 1) for m in unit_counts[1:]]
+        self.activation_functions = [ACTIVATION_FUNCTIONS[c[1]] for c in layer_config[1:]]
 
     def evaluate(self, a):
         values = [NodeValues(None, a)]
-        for weights, biases, g in list(zip(self.weights, self.biases, self.activation_functions))[1:]:
-            z = np.dot(weights, a) + biases
+        for w, b, g in zip(self.weights, self.biases, self.activation_functions):
+            z = np.dot(w, a) + b
             a = g[0](z)
             values.append(NodeValues(z, a))
         return values
@@ -55,10 +55,10 @@ class NeuralNetwork:
                 delta_a = (values[L].a - y) / m
             else:
                 # delta_z is the delta z for layer l + 1
-                delta_a = np.dot(self.weights[l + 1].T, delta_z)
+                delta_a = np.dot(self.weights[l + 1 - 1].T, delta_z)
 
             # element-wise multiplication
-            delta_z = delta_a * self.activation_functions[l][1](values[l].z)
+            delta_z = delta_a * self.activation_functions[l - 1][1](values[l].z)
 
             delta_w = np.dot(delta_z, values[l - 1].a.T)
             delta_b = np.sum(delta_z, axis=1, keepdims=True)
@@ -78,8 +78,8 @@ class NeuralNetwork:
             print("Epoch {}: error = {}".format(epoch, error))
             delta_weights, delta_biases = self.backprop(values, ys)
             for k in range(0, len(delta_weights)):
-                self.weights[k + 1] -= learning_rate * delta_weights[k]
-                self.biases[k + 1] -= learning_rate * delta_biases[k]
+                self.weights[k] -= learning_rate * delta_weights[k]
+                self.biases[k] -= learning_rate * delta_biases[k]
         print(values[-1].a)
         print(ys)
 
