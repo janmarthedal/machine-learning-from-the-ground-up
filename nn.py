@@ -32,11 +32,11 @@ class NeuralNetwork:
         unit_counts = [layer[0] for layer in layer_config]
         self.weights = [np.random.randn(m, n) for n, m in zip(unit_counts[:-1], unit_counts[1:])]
         self.biases = [np.random.randn(m, 1) for m in unit_counts[1:]]
-        self.activation_functions = [ACTIVATION_FUNCTIONS[c[1]] for c in layer_config[1:]]
+        self.activations = [ACTIVATION_FUNCTIONS[c[1]] for c in layer_config[1:]]
 
     def evaluate(self, a):
         values = [NodeValues(None, a)]
-        for w, b, g in zip(self.weights, self.biases, self.activation_functions):
+        for w, b, g in zip(self.weights, self.biases, self.activations):
             z = np.dot(w, a) + b
             a = g[0](z)
             values.append(NodeValues(z, a))
@@ -44,32 +44,36 @@ class NeuralNetwork:
 
     def backprop(self, values, y):
         m = y.shape[1]
-        delta_weights = []
-        delta_biases = []
+        L = len(self.weights)
+        dJdWs = []
+        dJdbs = []
 
-        L = len(values) - 1
         # l = L, L - 1, ..., 1
         for l in range(L, 0, -1):
             if l == L:
                 # special case for output layer
-                delta_a = (values[L].a - y) / m
+                # dJda^l = (a^L - y) / m
+                dJda = (values[L].a - y) / m
             else:
-                # delta_z is the delta z for layer l + 1
-                delta_a = np.dot(self.weights[l + 1 - 1].T, delta_z)
+                # dJda^l = W^(l+1)^T * dJdz^(l+1)
+                dJda = np.dot(self.weights[l + 1 - 1].T, dJdz)
 
-            # element-wise multiplication
-            delta_z = delta_a * self.activation_functions[l - 1][1](values[l].z)
+            # '*' does element-wise multiplication
+            # dJdz^l = dJda^l * g^l'(z^l)
+            dJdz = dJda * self.activations[l - 1][1](values[l].z)
 
-            delta_w = np.dot(delta_z, values[l - 1].a.T)
-            delta_b = np.sum(delta_z, axis=1, keepdims=True)
+            # dJdW^l = dJdz^l * a^(l-1)^T
+            dJdW = np.dot(dJdz, values[l - 1].a.T)
+            # dJdb^l = dJdz^l * [1, 1, ..., 1]
+            dJdb = np.sum(dJdz, axis=1, keepdims=True)
 
-            delta_weights.append(delta_w)
-            delta_biases.append(delta_b)
+            dJdWs.append(dJdW)
+            dJdbs.append(dJdb)
 
-        delta_weights.reverse()
-        delta_biases.reverse()
+        dJdWs.reverse()
+        dJdbs.reverse()
 
-        return delta_weights, delta_biases
+        return dJdWs, dJdbs
 
     def train(self, xs, ys, epochs, learning_rate):
         for epoch in range(epochs):
