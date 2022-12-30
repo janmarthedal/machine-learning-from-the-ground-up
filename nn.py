@@ -1,15 +1,6 @@
 import numpy as np
 from collections import namedtuple
-
-def sigmoid(z):
-    return 1.0 / (1.0 + np.exp(-z))
-
-def sigmoid_prime(z):
-    t = sigmoid(z)
-    return t * (1 - t)
-
-IDENTITY_ACTIVATION = (lambda z: z, lambda z: np.ones(z.shape))
-SIGMOID_ACTIVATION = (sigmoid, sigmoid_prime)
+from activation import SIGMOID_ACTIVATION, IDENTITY_ACTIVATION
 
 def compute_error(a, y):
     m = y.shape[1]   # number of training examples
