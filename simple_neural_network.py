@@ -3,7 +3,10 @@ from collections import namedtuple
 
 def compute_error(a, y):
     m = y.shape[1]   # number of training examples
-    return 0.5 / m * np.linalg.norm(a - y, 'fro') ** 2
+    return 0.5 * np.linalg.norm(a - y, 'fro') ** 2 / m
+
+def dummy_hook(epoch, error):
+    pass
 
 NodeValues = namedtuple('NodeValues', ['z', 'a'])
 
@@ -28,7 +31,8 @@ class SimpleNeuralNetwork:
             values.append(NodeValues(z, a))
         return values
 
-    def backprop(self, values, y):
+    # compute gradient using back propagation
+    def compute_gradient(self, values, y):
         m = y.shape[1]
         L = len(self.layers)
         dJdWs = []
@@ -50,7 +54,7 @@ class SimpleNeuralNetwork:
 
             # dJdW^l = dJdz^l * a^(l-1)^T
             dJdW = np.dot(dJdz, values[l - 1].a.T)
-            # dJdb^l = dJdz^l * [1, 1, ..., 1]
+            # dJdb^l = dJdz^l * [1 1 ... 1]
             dJdb = np.sum(dJdz, axis=1, keepdims=True)
 
             dJdWs.append(dJdW)
@@ -61,14 +65,16 @@ class SimpleNeuralNetwork:
 
         return dJdWs, dJdbs
 
-    def train(self, xs, ys, epochs, learning_rate):
+    def train(self, xs, ys, epochs, learning_rate, callback=dummy_hook):
+        values = self.evaluate(xs)
+        error = compute_error(values[-1].a, ys)
+        callback(0, error)
         for epoch in range(epochs):
-            values = self.evaluate(xs)
-            error = compute_error(values[-1].a, ys)
-            print("Epoch {}: error = {}".format(epoch, error))
-            dJdWs, dJdbs = self.backprop(values, ys)
+            dJdWs, dJdbs = self.compute_gradient(values, ys)
             for layer, dJdW, dJdb in zip(self.layers, dJdWs, dJdbs):
                 layer.W -= learning_rate * dJdW
                 layer.b -= learning_rate * dJdb
-        print(values[-1].a)
-        print(ys)
+            values = self.evaluate(xs)
+            error = compute_error(values[-1].a, ys)
+            callback(epoch + 1, error)
+        return values[-1].a
