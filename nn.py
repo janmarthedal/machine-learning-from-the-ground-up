@@ -17,25 +17,36 @@ def compute_error(a, y):
 
 NodeValues = namedtuple('NodeValues', ['z', 'a'])
 
+class Layer:
+    def __init__(self, input_count, output_count, activation):
+        self.weights = np.random.randn(output_count, input_count)
+        self.biases = np.random.randn(output_count, 1)
+        self.activation = activation
+    def evaluate(self, a):
+        z = np.dot(self.weights, a) + self.biases
+        a = self.activation[0](z)
+        return z, a
+    def increment_weights(self, delta_weights, delta_biases):
+        self.weights += delta_weights
+        self.biases += delta_biases
+
 class NeuralNetwork:
 
     def __init__(self, layer_config):
         unit_counts = [layer[0] for layer in layer_config]
-        self.weights = [np.random.randn(m, n) for n, m in zip(unit_counts[:-1], unit_counts[1:])]
-        self.biases = [np.random.randn(m, 1) for m in unit_counts[1:]]
-        self.activations = [c[1] for c in layer_config[1:]]
+        activations = [layer[1] for layer in layer_config[1:]]
+        self.layers = [Layer(m, n, g) for m, n, g in zip(unit_counts[:-1], unit_counts[1:], activations)]
 
     def evaluate(self, a):
         values = [NodeValues(None, a)]
-        for w, b, g in zip(self.weights, self.biases, self.activations):
-            z = np.dot(w, a) + b
-            a = g[0](z)
+        for layer in self.layers:
+            z, a = layer.evaluate(a)
             values.append(NodeValues(z, a))
         return values
 
     def backprop(self, values, y):
         m = y.shape[1]
-        L = len(self.weights)
+        L = len(self.layers)
         dJdWs = []
         dJdbs = []
 
@@ -47,11 +58,11 @@ class NeuralNetwork:
                 dJda = (values[L].a - y) / m
             else:
                 # dJda^l = W^(l+1)^T * dJdz^(l+1)
-                dJda = np.dot(self.weights[l + 1 - 1].T, dJdz)
+                dJda = np.dot(self.layers[l + 1 - 1].weights.T, dJdz)
 
             # numpy '*' does element-wise multiplication
             # dJdz^l = dJda^l * g^l'(z^l)
-            dJdz = dJda * self.activations[l - 1][1](values[l].z)
+            dJdz = dJda * self.layers[l - 1].activation[1](values[l].z)
 
             # dJdW^l = dJdz^l * a^(l-1)^T
             dJdW = np.dot(dJdz, values[l - 1].a.T)
@@ -71,10 +82,9 @@ class NeuralNetwork:
             values = self.evaluate(xs)
             error = compute_error(values[-1].a, ys)
             print("Epoch {}: error = {}".format(epoch, error))
-            delta_weights, delta_biases = self.backprop(values, ys)
-            for k in range(0, len(delta_weights)):
-                self.weights[k] -= learning_rate * delta_weights[k]
-                self.biases[k] -= learning_rate * delta_biases[k]
+            dJdWs, dJdbs = self.backprop(values, ys)
+            for layer, dJdW, dJdb in zip(self.layers, dJdWs, dJdbs):
+                layer.increment_weights(-learning_rate * dJdW, -learning_rate * dJdb)
         print(values[-1].a)
         print(ys)
 
