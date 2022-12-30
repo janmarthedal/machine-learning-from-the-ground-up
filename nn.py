@@ -4,27 +4,18 @@ from collections import namedtuple
 def sigmoid(z):
     return 1.0 / (1.0 + np.exp(-z))
 
-def sigmoid_derivative(z):
+def sigmoid_prime(z):
     t = sigmoid(z)
     return t * (1 - t)
 
-def identity(z):
-    return z
-
-def identity_derivative(z):
-    return np.ones(z.shape)
-
-ACTIVATION_FUNCTIONS = {
-    'identity': (identity, identity_derivative),
-    'sigmoid': (sigmoid, sigmoid_derivative),
-}
+IDENTITY_ACTIVATION = (lambda z: z, lambda z: np.ones(z.shape))
+SIGMOID_ACTIVATION = (sigmoid, sigmoid_prime)
 
 def compute_error(a, y):
     m = y.shape[1]   # number of training examples
     return 0.5 / m * np.linalg.norm(a - y, 'fro') ** 2
 
 NodeValues = namedtuple('NodeValues', ['z', 'a'])
-Layer = namedtuple('Layer', ['weights', 'biases', 'activation_fun', 'activation_deriv'])
 
 class NeuralNetwork:
 
@@ -32,7 +23,7 @@ class NeuralNetwork:
         unit_counts = [layer[0] for layer in layer_config]
         self.weights = [np.random.randn(m, n) for n, m in zip(unit_counts[:-1], unit_counts[1:])]
         self.biases = [np.random.randn(m, 1) for m in unit_counts[1:]]
-        self.activations = [ACTIVATION_FUNCTIONS[c[1]] for c in layer_config[1:]]
+        self.activations = [c[1] for c in layer_config[1:]]
 
     def evaluate(self, a):
         values = [NodeValues(None, a)]
@@ -58,7 +49,7 @@ class NeuralNetwork:
                 # dJda^l = W^(l+1)^T * dJdz^(l+1)
                 dJda = np.dot(self.weights[l + 1 - 1].T, dJdz)
 
-            # '*' does element-wise multiplication
+            # numpy '*' does element-wise multiplication
             # dJdz^l = dJda^l * g^l'(z^l)
             dJdz = dJda * self.activations[l - 1][1](values[l].z)
 
@@ -89,7 +80,7 @@ class NeuralNetwork:
 
 if __name__ == "__main__":
     np.random.seed(seed=0)
-    nn = NeuralNetwork([(2, ), (3, 'sigmoid'), (2, 'identity')])
+    nn = NeuralNetwork([(2, ), (3, SIGMOID_ACTIVATION), (2, IDENTITY_ACTIVATION)])
     xs = np.array([
         [1.0, 0.0],
         [2.0, 0.0]
