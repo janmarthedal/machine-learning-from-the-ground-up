@@ -1,9 +1,6 @@
 import numpy as np
 from collections import namedtuple
-
-def compute_error(a, y):
-    m = y.shape[1]   # number of training examples
-    return 0.5 * np.linalg.norm(a - y, 'fro') ** 2 / m
+from np_utils import compute_error
 
 def dummy_hook(epoch, error):
     pass
@@ -12,8 +9,8 @@ NodeValues = namedtuple('NodeValues', ['z', 'a'])
 
 class Layer:
     def __init__(self, input_count, output_count, activation):
-        self.W = np.random.randn(output_count, input_count)
-        self.b = np.random.randn(output_count, 1)
+        self.W = 0.2 * np.random.randn(output_count, input_count)
+        self.b = 0.2 * np.random.randn(output_count, 1)
         self.g = activation
 
 class SimpleNeuralNetwork:
