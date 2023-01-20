@@ -51,7 +51,7 @@ class SimpleNeuralNetwork:
 
             # dJdW^l = dJdz^l * a^(l-1)^T
             dJdW = np.dot(dJdz, values[l - 1].a.T)
-            # dJdb^l = dJdz^l * [1 1 ... 1]
+            # dJdb^l = dJdz^l * [1 1 ... 1]^T
             dJdb = np.sum(dJdz, axis=1, keepdims=True)
 
             dJdWs.append(dJdW)

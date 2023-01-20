@@ -49,6 +49,11 @@ def mnist_iteration_hook(epoch, error, nn, x_test, y_test):
 # 2000 training samples, 200 test samples, 0.005 learning rate
 #   4300 iterations, 75% accuracy
 #   9780 iterations, 80% accuracy
+# 60000 training samples, 10000 test samples, 0.01 learning rate
+#   2160 iterations, 75% accuracy
+#   3370 iterations, 80% accuracy
+#   5940 iterations, 85% accuracy
+#   9340 iterations, 88% accuracy
 
 def mnist_test():
     (x_train, y_train), (x_test, y_test) = load_mnist_data()
