@@ -1,10 +1,24 @@
 import numpy as np
 from collections import namedtuple
-from np_utils import compute_error
 
-def dummy_hook(epoch, error):
-    pass
+# Compute error/loss function
+def compute_error(a, y):
+    m = y.shape[1]   # number of training examples
+    return 0.5 * np.linalg.norm(a - y, 'fro') ** 2 / m
 
+# Activation functions
+def sigmoid(z):
+    return 1.0 / (1.0 + np.exp(-z))
+
+def sigmoid_prime(z):
+    t = sigmoid(z)
+    return t * (1 - t)
+
+SIGMOID_ACTIVATION = (sigmoid, sigmoid_prime)
+IDENTITY_ACTIVATION = (lambda z: z, lambda z: np.ones(z.shape))
+RELU_ACTIVATION = (lambda x: (x >= 0) * x, lambda x: x >= 0)
+
+# Helper class to store values of z and a
 NodeValues = namedtuple('NodeValues', ['z', 'a'])
 
 class Layer:
@@ -15,11 +29,14 @@ class Layer:
 
 class SimpleNeuralNetwork:
 
+    # input_count is the number of input units
+    # layer_params is a list of tuples (unit_count, activation)
     def __init__(self, input_count, layer_params):
         unit_counts = [input_count] + [layer[0] for layer in layer_params]
         activations = [layer[1] for layer in layer_params]
         self.layers = [Layer(m, n, g) for m, n, g in zip(unit_counts[:-1], unit_counts[1:], activations)]
 
+    # Compute output of each layer
     def evaluate(self, a):
         values = [NodeValues(None, a)]
         for layer in self.layers:
@@ -28,7 +45,7 @@ class SimpleNeuralNetwork:
             values.append(NodeValues(z, a))
         return values
 
-    # compute gradient using back propagation
+    # Compute gradient using back propagation
     def compute_gradient(self, values, y):
         m = y.shape[1]
         L = len(self.layers)
@@ -62,7 +79,8 @@ class SimpleNeuralNetwork:
 
         return dJdWs, dJdbs
 
-    def train(self, xs, ys, epochs, learning_rate, callback=dummy_hook):
+    # Train the neural network
+    def train(self, xs, ys, epochs, learning_rate, callback):
         values = self.evaluate(xs)
         error = compute_error(values[-1].a, ys)
         callback(0, error)
@@ -75,3 +93,20 @@ class SimpleNeuralNetwork:
             error = compute_error(values[-1].a, ys)
             callback(epoch + 1, error)
         return values[-1].a
+
+def iteration_hook(epoch, error):
+    print("epoch: {}, error: {}".format(epoch, error))
+
+if __name__ == '__main__':
+    nn = SimpleNeuralNetwork(2, [(3, SIGMOID_ACTIVATION), (2, IDENTITY_ACTIVATION)])
+    xs = np.array([
+        [1.0, 0.0],
+        [2.0, 0.0]
+    ])
+    ys = np.array([
+        [1.0, 0.5],
+        [3.0, 2.0]
+    ])
+    output = nn.train(xs, ys, 100, 0.1, iteration_hook)
+    print("output:\n", output)
+    print("target:\n", ys)
