@@ -95,18 +95,16 @@ class SimpleNeuralNetwork:
         return values[-1].a
 
 def iteration_hook(epoch, error):
-    print("epoch: {}, error: {}".format(epoch, error))
+    if epoch % 100 == 0:
+        print("epoch: {}, error: {}".format(epoch, error))
 
 if __name__ == '__main__':
-    nn = SimpleNeuralNetwork(2, [(3, SIGMOID_ACTIVATION), (2, IDENTITY_ACTIVATION)])
-    xs = np.array([
-        [1.0, 0.0],
-        [2.0, 0.0]
-    ])
-    ys = np.array([
-        [1.0, 0.5],
-        [3.0, 2.0]
-    ])
-    output = nn.train(xs, ys, 100, 0.1, iteration_hook)
-    print("output:\n", output)
-    print("target:\n", ys)
+    import matplotlib.pyplot as plt
+    # produce the same initial weights every time
+    np.random.seed(seed=0)
+    nn = SimpleNeuralNetwork(1, [(20, SIGMOID_ACTIVATION), (1, IDENTITY_ACTIVATION)])
+    xs = np.arange(-5, 5, 0.1).reshape(1, -1)
+    ys = np.sin(xs)
+    output = nn.train(xs, ys, 2000, 0.1, iteration_hook)
+    plt.plot(xs.ravel(), ys.ravel(), 'b', xs.ravel(), output.ravel(), 'r')
+    plt.show()
