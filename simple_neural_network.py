@@ -106,5 +106,7 @@ if __name__ == '__main__':
     Xs = np.arange(-5, 5, 0.1).reshape(1, -1)
     Ys = np.sin(Xs)
     output = nn.train(Xs, Ys, 2000, 0.1, iteration_hook)
-    plt.plot(Xs.ravel(), Ys.ravel(), 'b', Xs.ravel(), output.ravel(), 'r')
+    plt.plot(Xs.ravel(), Ys.ravel(), 'b', label='target')
+    plt.plot(Xs.ravel(), output.ravel(), 'r', label='NN output')
+    plt.legend(loc='upper right')
     plt.show()
