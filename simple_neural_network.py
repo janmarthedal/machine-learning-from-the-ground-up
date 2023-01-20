@@ -60,7 +60,7 @@ class SimpleNeuralNetwork:
                 dA = (values[L].A - Y) / m
             else:
                 # dA^l = W^(l+1)^T * dZ^(l+1)
-                dA = np.dot(self.layers[l + 1 - 1].W.T, dZ)
+                dA = np.dot(self.layers[l].W.T, dZ)
 
             # numpy '*' does element-wise multiplication
             # dZ^l = dA^l * g^l'(Z^l)
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     nn = SimpleNeuralNetwork(1, [(20, SIGMOID_ACTIVATION), (1, IDENTITY_ACTIVATION)])
     Xs = np.arange(-5, 5, 0.1).reshape(1, -1)
     Ys = np.sin(Xs)
-    output = nn.train(Xs, Ys, 2000, 0.1, iteration_hook)
+    output = nn.train(Xs, Ys, 20000, 0.1, iteration_hook)
     plt.plot(Xs.ravel(), Ys.ravel(), 'b', label='target')
     plt.plot(Xs.ravel(), output.ravel(), 'r', label='NN output')
     plt.legend(loc='upper right')
