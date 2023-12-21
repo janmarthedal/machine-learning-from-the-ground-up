@@ -9,10 +9,13 @@ np.random.seed(seed=1)
 
 def mnist_iteration_hook(epoch, error, nn, x_test, y_test):
     if epoch % 10 == 0:
-        print("epoch: {}, error: {}".format(epoch, error))
+
         y_predict = nn.evaluate(x_test)[-1].a
         correct = np.argmax(y_predict, axis=0) == np.argmax(y_test, axis=0)
-        print("correct: {}/{} ({}%)".format(np.sum(correct), correct.size, round(100.0 * np.sum(correct) / correct.size)))
+
+        # print("epoch: {}, error: {}".format(epoch, error))
+        # print("correct: {}/{} ({:.1f}%)".format(np.sum(correct), correct.size, 100.0 * np.sum(correct) / correct.size))
+        print("{}, {}, {}".format(epoch, error, np.sum(correct)))
 
 if __name__ == "__main__":
     (x_train, y_train), (x_test, y_test) = load_mnist_data()
@@ -25,5 +28,6 @@ if __name__ == "__main__":
     print("y_train.shape: {}".format(y_train.shape))
     print("x_test.shape: {}".format(x_test.shape))
     print("y_test.shape: {}".format(y_test.shape))
+
     nn = SimpleNeuralNetwork(784, [(300, SIGMOID_ACTIVATION), (10, IDENTITY_ACTIVATION)])
-    _ = nn.train(x_train, y_train, 10000, 0.01, lambda epoch, error: mnist_iteration_hook(epoch, error, nn, x_test, y_test))
+    _ = nn.train(x_train, y_train, 10000, 0.03, lambda epoch, error: mnist_iteration_hook(epoch, error, nn, x_test, y_test))
